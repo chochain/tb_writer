@@ -328,23 +328,28 @@ namespace schema {
         
         return tp.buf();
     }
-    
-    U8V image_tensor(int w, int h, const U8V& px) {
-        auto png = png::raw2png(w, h, px, 3);            // 3=channels (RGB default)
 
+    U8V image_tensor(int w, int h, const U8V& px) {
+        auto png = png::raw2png(w, h, px, 3);
+
+        proto::Encoder tp;
+        tp.s32(1, 7);                                    // dtype = DT_STRING
+
+        // TensorShapeProto { dim { size: 3 } } = bytes 12 02 08 03
+        static const U8 shape3[] = {0x12, 0x02, 0x08, 0x03};
+        tp.raw(2, shape3, 4);                            // tensor_shape → field 2
+        
         // TB 2.10+ Time Series format: DT_STRING tensor with [w, h, png...]
         // string_val[0] = width as decimal ASCII
         // string_val[1] = height as decimal ASCII  
         // string_val[2] = raw PNG bytes
-        proto::Encoder tp;
-        tp.s32(1, 7);                                    // dtype = DT_STRING
         tp.str(8, std::to_string(w));                    // string_val[0]: width
         tp.str(8, std::to_string(h));                    // string_val[1]: height
         tp.raw(8, png.data(), png.size());               // string_val[2]: PNG bytes
-        
+
         return tp.buf();
     }
-
+    
     U8V image_raw(int w, int h, const U8V& px) {         // < TB2.10
         auto png = png::raw2png(w, h, px, 3);
         
