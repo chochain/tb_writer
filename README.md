@@ -1,6 +1,53 @@
-# TensorBoard FlatBuffers Event Writer (C++)
+# TensorBoard FlatBuffers Event Writer and Demo (C++)
 
 A self-contained C++ library that writes TensorBoard `.tfevents` Time-Series binary files for **scalar**, **text**, **image**, **histogram**, and **graph** summaries, using **FlatBuffers** for plugin metadata encoding.
+
+## How Build and Run
+### Environment (on Ubuntu 22.04+)
+
+```
+python -m venv ~/.venv
+source ~/.venv/bin/activate.sh  (or activate.csh)
+pip list --local                (make sure TensorBoard 2.20+ is installed)
+pip install tensorboard         (if missing)
+```
+
+### Build
+
+```bash
+make         # builds ./tb_demo
+make run     # builds and runs
+make clean   # removes binary
+```
+
+**Requirements:** `g++` with C++17, `make`. No external dependencies.
+
+### Running
+
+```bash
+./tb_demo [logdir]
+# Default logdir: /tmp/tb_demo
+```
+
+This writes three runs under `logdir/`:
+
+| Run         | Tags                                                      | Steps |
+|-------------|-----------------------------------------------------------|-------|
+| `scalars`   | `train/loss`, `train/accuracy`, `train/lr`, `val/*`       | 100   |
+| `texts`     | `step`, `accuracy`, `loss`                                | 100   |
+| `images`    | `sine_wave`, `gradient_heatmap`, `checkerboard`           | 10    |
+| `histograms`| `weights/layer1`, `weights/layer2`, `activations/relu`, `gradients/layer1` | 50 |
+| `graphs`    | `input`, `conv1`, `pool`, `conv2`                         | NA |
+
+---
+
+### Visualizing
+
+```bash
+tensorboard --logdir <output_dir>             (for local access)
+tensorboard --bind_all --logdir <output_dir>  (for remote access)
+# Open http://host_ip:6006 in any browser
+```
 
 ## File Structure
 
@@ -37,53 +84,6 @@ tb_flatbuf/
 ```
 
 ---
-
-## How Build and Run
-### Environment (on Ubuntu 22.04+)
-
-```
-python -m venv ~/.venv
-source ~/.venv/bin/activate.sh  (or activate.csh)
-pip list --local                (make sure TensorBoard 2.20+ is installed)
-pip install tensorboard         (if missing)
-```
-
-### Build
-
-```bash
-make         # builds ./tb_demo
-make run     # builds and runs
-make clean   # removes binary
-```
-
-**Requirements:** `g++` with C++17, `make`. No external dependencies.
-
-### Running
-
-```bash
-./tb_demo [logdir]
-# Default logdir: /tmp/tb_demo
-```
-
-This writes three runs under `logdir/`:
-
-| Run         | Tags                                                      | Steps |
-|-------------|-----------------------------------------------------------|-------|
-| `scalars`   | `train/loss`, `train/accuracy`, `train/lr`, `val/*`       | 100   |
-| `texts`     | `step`, `accuracy`, `loss`                                | 100   |
-| `images`    | `images/sine_wave`, `images/gradient_heatmap`, `images/checkerboard` | 10 |
-| `histograms`| `weights/layer1`, `weights/layer2`, `activations/relu`, `gradients/layer1` | 50 |
-| `graphs`    | `input`, `conv1`, `pool`, `conv2`                         | NA |
-
----
-
-### Visualizing
-
-```bash
-tensorboard --logdir <output_dir>             (for local access)
-tensorboard --bind_all --logdir <output_dir>  (for remote access)
-# Open http://host_ip:6006 in any browser
-```
 
 ## Fixes for TensorBoard 2.x Compatibility
 
