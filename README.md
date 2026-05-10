@@ -1,31 +1,89 @@
 # TensorBoard FlatBuffers Event Writer (C++)
 
-A self-contained C++ library that writes TensorBoard `.tfevents` binary files
-with **scalar**, **image**, and **histogram** summaries, using **FlatBuffers** for
-plugin metadata encoding.
+A self-contained C++ library that writes TensorBoard `.tfevents` Time-Series binary files for **scalar**, **text**, **image**, **histogram**, and **graph** summaries, using **FlatBuffers** for plugin metadata encoding.
 
 ## File Structure
 
 ```
-tb_flatbuffers/
+tb_flatbuf/
 ├── include/
-│   ├── flatbuf.h              # Minimal FlatBuffers builder
 │   ├── crc32c.h               # CRC32C + masked CRC for TFRecord framing
 │   ├── encode.h               # Minimal protobuf wire-format encoder
-│   ├── schema.h               # FlatBuffers encoders for TB plugin data
-│   ├── hparam.h               # HParams tab handler
+│   ├── flatbuf.h              # Minimal FlatBuffers builder
 │   ├── graph.h                # Graph tab handler
+│   ├── hparam.h               # HParams tab handler
+│   ├── png.h                  # PNG image constructor
+│   ├── schema.h               # FlatBuffers encoders for TB plugin data
+│   ├── types.h                # common types
 │   └── writer.h               # Main EventWriter class
 ├── src/
 │   ├── main.cpp               # Demo application
 │   └── main_hparam.cpp        # Demo for HParams application
 ├── schemas/
-│   └── tb_plugin_data.fbs     # FlatBuffers schema (for documentation/flatc)
+│   ├── tb_plugin_data.fbs     # FlatBuffer schemas
+│   ├── versions.proto         # Protobuf definition (for reference)
+│   ├── types.proto
+│   ├── tensor_shape.proto
+│   ├── tensor.proto
+│   ├── summary.proto
+│   ├── resource_handle.proto
+│   ├── onnx.proto
+│   ├── node_def.proto
+│   ├── graph.proto
+│   ├── event.proto
+│   └── attr_value.cpp
 ├── Makefile
 └── README.md
 ```
 
 ---
+
+## How Build and Run
+### Environment (on Ubuntu 22.04+)
+
+```
+python -m venv ~/.venv
+source ~/.venv/bin/activate.sh  (or activate.csh)
+pip list --local                (make sure TensorBoard 2.20+ is installed)
+pip install tensorboard         (if missing)
+```
+
+### Build
+
+```bash
+make         # builds ./tb_demo
+make run     # builds and runs
+make clean   # removes binary
+```
+
+**Requirements:** `g++` with C++17, `make`. No external dependencies.
+
+### Running
+
+```bash
+./tb_demo [logdir]
+# Default logdir: /tmp/tb_demo
+```
+
+This writes three runs under `logdir/`:
+
+| Run         | Tags                                                      | Steps |
+|-------------|-----------------------------------------------------------|-------|
+| `scalars`   | `train/loss`, `train/accuracy`, `train/lr`, `val/*`       | 100   |
+| `texts`     | `step`, `accuracy`, `loss`                                | 100   |
+| `images`    | `images/sine_wave`, `images/gradient_heatmap`, `images/checkerboard` | 10 |
+| `histograms`| `weights/layer1`, `weights/layer2`, `activations/relu`, `gradients/layer1` | 50 |
+| `graphs`    | `input`, `conv1`, `pool`, `conv2`                         | NA |
+
+---
+
+### Visualizing
+
+```bash
+tensorboard --logdir <output_dir>             (for local access)
+tensorboard --bind_all --logdir <output_dir>  (for remote access)
+# Open http://host_ip:6006 in any browser
+```
 
 ## Fixes for TensorBoard 2.x Compatibility
 
@@ -47,44 +105,6 @@ events.out.tfevents.{unix_timestamp}.{hostname}.{pid}.{sequence}
 ```
 The previous code used `events.out.tfevents.{timestamp}.demo` which TensorBoard's file discovery rejects.
 
----
-
-```bash
-make         # builds ./tb_demo
-make run     # builds and runs
-make clean   # removes binary
-```
-
-**Requirements:** `g++` with C++17, `make`. No external dependencies.
-
----
-
-## Running
-
-```bash
-./tb_demo [logdir]
-# Default logdir: /tmp/tb_flatbuffers_demo
-```
-
-This writes three runs under `logdir/`:
-
-| Run         | Tags                                                      | Steps |
-|-------------|-----------------------------------------------------------|-------|
-| `scalars`   | `train/loss`, `train/accuracy`, `train/lr`, `val/*`       | 100   |
-| `images`    | `images/sine_wave`, `images/gradient_heatmap`, `images/checkerboard` | 10 |
-| `histograms`| `weights/layer1`, `weights/layer2`, `activations/relu`, `gradients/layer1` | 50 |
-
----
-
-## Visualizing
-
-```bash
-pip install tensorboard
-tensorboard --logdir /tmp/tb_flatbuffers_demo
-# Open http://localhost:6006
-```
-
----
 
 ## FlatBuffers Role
 
