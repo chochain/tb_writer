@@ -71,7 +71,8 @@ inline U8V raw2png(int w,int h, const U8V& px,int ch=3){
         sl.push_back(0);
         sl.insert(sl.end(), px.begin()+y*rb, px.begin()+(y+1)*rb);
     }
-
+/*
+    // uncompressed PNG
     U8V zlib;
     zlib.push_back(0x78);
     zlib.push_back(0x01);
@@ -89,18 +90,18 @@ inline U8V raw2png(int w,int h, const U8V& px,int ch=3){
         zlib.insert(zlib.end(), sl.begin()+pos, sl.begin()+pos+bsz);
         pos += bsz;
     }
-/*
-    // After building sl (scanlines), compress with zlib:
+*/
+    // compress with zlib (gcc link with -lz)
     uLongf zlen = compressBound(sl.size());
     std::vector<uint8_t> zbuf(zlen);
     compress2(zbuf.data(), &zlen, sl.data(), sl.size(), Z_DEFAULT_COMPRESSION);
 
-    U8V zlib_data;
-    zlib_data.push_back(0x78); zlib_data.push_back(0x9c);                   // zlib header
-    zlib_data.insert(zlib_data.end(), zbuf.begin()+2, zbuf.begin()+zlen-4); // skip zlib wrapper, keep raw deflate
-*/  
-    push_be32(zlib, adler32(sl.data(), sl.size()));
-    write_chunk(out,"IDAT", zlib);
+    U8V zdat;
+    zdat.push_back(0x78); zdat.push_back(0x9c);                   // zlib header
+    zdat.insert(zdat.end(), zbuf.begin()+2, zbuf.begin()+zlen-4); // skip zlib wrapper, keep raw deflate
+
+    push_be32(zdat, adler32(sl.data(), sl.size()));
+    write_chunk(out,"IDAT", zdat);
     write_chunk(out,"IEND", {});
     
     return out;
